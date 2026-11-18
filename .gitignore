@@ -1,0 +1,29 @@
+# Node modules
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js build output
+.next/
+out/
+
+# Production
+build/
+dist/
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment variables
+.env*.local
+.env
+
+# Database file (keep template / seed in repo, but ignore runtime state if desired or keep tracked)
+# data/db.json is tracked or initialized automatically
+
+# OS generated
+.DS_Store
+Thumbs.db
+
