@@ -55,3 +55,11 @@ body {
   0% { background-position: 0 0, 3px 5px; }
   100% { background-position: 7px 7px, 14px 16px; }
 }
+
+/* Photo-count segment for a secret (spoiler) photo */
+.spoiler-bar {
+  background-color: rgba(255, 77, 130, 0.35);
+  background-image: radial-gradient(rgba(255, 255, 255, 0.9) 0.6px, transparent 1px);
+  background-size: 4px 4px;
+  animation: spoiler-shimmer 1.2s steps(6) infinite;
+}

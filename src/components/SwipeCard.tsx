@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   motion,
   useMotionValue,
@@ -39,8 +39,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showFullBio, setShowFullBio] = useState(false);
-  // Photos after the first are hidden behind a spoiler until tapped (curiosity hook).
-  const [revealed, setRevealed] = useState<Set<number>>(new Set([0]));
+  // Photos after the first are spoilers: visible only while pressed & held.
+  const [peeking, setPeeking] = useState(false);
+  const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const didPeek = useRef(false);
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-250, 0, 250], [-18, 0, 18]);
@@ -51,7 +53,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   useEffect(() => {
     setPhotoIndex(0);
     setShowFullBio(false);
-    setRevealed(new Set([0]));
+    setPeeking(false);
     x.set(0);
   }, [profile.id, x]);
 
@@ -66,8 +68,24 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   }, [swipeTrigger, isFront, x]);
 
   const photos = profile.photos?.length ? profile.photos : [FALLBACK_IMAGE];
-  const isSpoiled = !revealed.has(photoIndex);
-  const revealPhoto = () => setRevealed((prev) => new Set(prev).add(photoIndex));
+  const isHiddenPhoto = photoIndex > 0;
+  const isSpoiled = isHiddenPhoto && !peeking;
+  const hiddenCount = Math.max(photos.length - 1, 0);
+
+  const startHold = () => {
+    didPeek.current = false;
+    if (!isHiddenPhoto) return;
+    holdTimer.current = setTimeout(() => {
+      didPeek.current = true;
+      setPeeking(true);
+    }, 140);
+  };
+  const endHold = () => {
+    if (holdTimer.current) clearTimeout(holdTimer.current);
+    holdTimer.current = null;
+    setPeeking(false);
+  };
+  useEffect(() => endHold, []);
 
   const handleDragEnd = (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (!isFront) return;
@@ -85,6 +103,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
   const handleNextPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (didPeek.current) return; // a hold-to-peek, not a tap
     if (photoIndex < photos.length - 1) {
       setPhotoIndex(photoIndex + 1);
     }
@@ -92,6 +111,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
   const handlePrevPhoto = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (didPeek.current) return;
     if (photoIndex > 0) {
       setPhotoIndex(photoIndex - 1);
     }
@@ -135,14 +155,20 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       drag="x"
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.85}
+      onDragStart={endHold}
       onDragEnd={handleDragEnd}
+      onPointerDown={startHold}
+      onPointerUp={endHold}
+      onPointerLeave={endHold}
+      onPointerCancel={endHold}
+      onContextMenu={(e) => e.preventDefault()}
       whileTap={{ cursor: 'grabbing' }}
     >
       {/* Background Image Carousel */}
       <img
         src={photos[photoIndex]}
         alt={profile.name}
-        className={`w-full h-full object-cover select-none transition-all duration-300 ${
+        className={`w-full h-full object-cover select-none transition-[filter,transform] duration-200 ${
           isSpoiled ? 'blur-2xl scale-110' : ''
         }`}
         draggable={false}
@@ -153,35 +179,42 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 
       {/* Telegram-style spoiler: shimmering dust over hidden photos */}
       {isSpoiled && (
-        <div
-          className="absolute inset-0 z-[5] spoiler-dust flex items-center justify-center"
-          onClick={(e) => {
-            e.stopPropagation();
-            revealPhoto();
-          }}
-        >
-          <div className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg pointer-events-none">
-            ✨ Tap anywhere to reveal photo {photoIndex + 1}
+        <div className="absolute inset-0 z-[5] spoiler-dust flex items-center justify-center pointer-events-none">
+          <div className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg">
+            🤫 Hold anywhere to peek
           </div>
         </div>
       )}
 
-      {/* Top Photo Navigation Indicators */}
+      {/* Photo count: segmented bar (secret photos shimmer) + counter chip */}
       {photos.length > 1 && (
-        <div className="absolute top-3 left-4 right-4 flex gap-1.5 z-20">
-          {photos.map((_, idx) => (
-            <div
-              key={idx}
-              className={`h-1 flex-1 rounded-full transition-all duration-300 ${
-                idx === photoIndex ? 'bg-white shadow-sm' : 'bg-white/30'
-              }`}
-            />
-          ))}
+        <div className="absolute top-3 left-4 right-4 z-20 pointer-events-none">
+          <div className="flex gap-1.5">
+            {photos.map((_, idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                  idx === photoIndex
+                    ? 'bg-white shadow-sm'
+                    : idx === 0
+                    ? 'bg-white/35'
+                    : 'spoiler-bar'
+                }`}
+              />
+            ))}
+          </div>
+          <div className="mt-2 flex justify-end">
+            <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white border border-white/15">
+              {photoIndex === 0
+                ? `📸 1/${photos.length} · +${hiddenCount} secret`
+                : `🔒 ${photoIndex + 1}/${photos.length}`}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Interactive Photo Tap Zones (Left 40% prev, Right 40% next) */}
-      {photos.length > 1 && !isSpoiled && (
+      {/* Interactive Photo Tap Zones (quick tap = flip; hold = peek) */}
+      {photos.length > 1 && (
         <>
           <div
             onClick={handlePrevPhoto}
