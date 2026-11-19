@@ -39,8 +39,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showFullBio, setShowFullBio] = useState(false);
-  // Photos after the first are spoilers: visible only while pressed & held.
+  // Photo 1 is clear. The rest of the first half are tap-to-reveal spoilers;
+  // the second half are hold-to-peek (visible only while pressed).
   const [peeking, setPeeking] = useState(false);
+  const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const didPeek = useRef(false);
 
@@ -54,6 +56,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     setPhotoIndex(0);
     setShowFullBio(false);
     setPeeking(false);
+    setRevealed(new Set());
     x.set(0);
   }, [profile.id, x]);
 
@@ -68,13 +71,21 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   }, [swipeTrigger, isFront, x]);
 
   const photos = profile.photos?.length ? profile.photos : [FALLBACK_IMAGE];
-  const isHiddenPhoto = photoIndex > 0;
-  const isSpoiled = isHiddenPhoto && !peeking;
+  const tapCutoff = Math.ceil(photos.length / 2); // e.g. 4 photos -> #2 tap, #3-4 peek
+  const photoMode = (idx: number): 'clear' | 'tap' | 'peek' =>
+    idx === 0 ? 'clear' : idx < tapCutoff ? 'tap' : 'peek';
+  const mode = photoMode(photoIndex);
+  const isTapLocked = mode === 'tap' && !revealed.has(photoIndex);
+  const isSpoiled = isTapLocked || (mode === 'peek' && !peeking);
   const hiddenCount = Math.max(photos.length - 1, 0);
+
+  const revealTap = () => {
+    if (isTapLocked) setRevealed((prev) => new Set(prev).add(photoIndex));
+  };
 
   const startHold = () => {
     didPeek.current = false;
-    if (!isHiddenPhoto) return;
+    if (mode !== 'peek') return;
     holdTimer.current = setTimeout(() => {
       didPeek.current = true;
       setPeeking(true);
@@ -161,6 +172,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       onPointerUp={endHold}
       onPointerLeave={endHold}
       onPointerCancel={endHold}
+      onClick={revealTap}
       onContextMenu={(e) => e.preventDefault()}
       whileTap={{ cursor: 'grabbing' }}
     >
@@ -181,7 +193,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       {isSpoiled && (
         <div className="absolute inset-0 z-[5] spoiler-dust flex items-center justify-center pointer-events-none">
           <div className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg">
-            🤫 Hold anywhere to peek
+            {isTapLocked ? '✨ Tap anywhere to reveal' : '🤫 Hold anywhere to peek'}
           </div>
         </div>
       )}
@@ -196,9 +208,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
                 className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
                   idx === photoIndex
                     ? 'bg-white shadow-sm'
-                    : idx === 0
+                    : photoMode(idx) === 'clear' || revealed.has(idx)
                     ? 'bg-white/35'
-                    : 'spoiler-bar'
+                    : photoMode(idx) === 'tap'
+                    ? 'spoiler-bar'
+                    : 'spoiler-bar spoiler-bar-peek'
                 }`}
               />
             ))}
@@ -207,14 +221,16 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             <span className="text-[11px] font-bold px-2.5 py-1 rounded-full bg-black/50 backdrop-blur-md text-white border border-white/15">
               {photoIndex === 0
                 ? `📸 1/${photos.length} · +${hiddenCount} secret`
-                : `🔒 ${photoIndex + 1}/${photos.length}`}
+                : mode === 'tap'
+                ? `${isTapLocked ? '🔒' : '🔓'} ${photoIndex + 1}/${photos.length} · tap`
+                : `👀 ${photoIndex + 1}/${photos.length} · hold`}
             </span>
           </div>
         </div>
       )}
 
       {/* Interactive Photo Tap Zones (quick tap = flip; hold = peek) */}
-      {photos.length > 1 && (
+      {photos.length > 1 && !isTapLocked && (
         <>
           <div
             onClick={handlePrevPhoto}

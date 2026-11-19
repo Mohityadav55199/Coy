@@ -22,7 +22,9 @@ This repository contains the complete implementation and technical documentation
 
 ### 2. Smooth Swipe Physics & Gestures
 - **Mobile Touch Gestures**: Smooth horizontal drag gestures using Framer Motion with elastic drag constraints, dynamic card tilt, and rotation.
-- **Real-Time Visual Stamps**: Proportional opacity fading for the emerald **LIKE** stamp (drag right) and rose **PASS** stamp (drag left).
+- **Coy-Style Stamps**: **🤫 SECRETLY LIKED** fades in on drag right and **NOT THIS TIME** on drag left.
+- **Spoiler Photos**: Each profile has 4 photos. Photo 1 is always clear, so you can judge someone at a glance. Photo 2 is a tap-to-reveal spoiler (tap anywhere and it stays revealed). Photos 3–4 are hold-to-peek: visible only while pressed and blurred again on release. A segmented bar and a counter chip (e.g. "📸 1/4 · +3 secret") show how many photos there are and which ones are hidden.
+- **Mystery Match**: A match first shows a sealed 💌 "Someone liked you back…" screen. Tap it to see who.
 - **Desktop Friendly**: Dedicated action buttons (Pass, Info, Like) and **keyboard shortcuts** (`←` / `A` to pass, `→` / `D` to like).
 - **Stack Card Elevation**: Underneath card scales and elevates smoothly as top card is swiped.
 - **Non-Repetition Guarantee**: Once swiped (liked or passed), a profile is persistently marked and never appears again in the user's feed.
@@ -62,15 +64,17 @@ This repository contains the complete implementation and technical documentation
 
 ## 📋 Part A: Suggested Core Features
 
-### 1. Coy Campus Circles (Privacy-Preserving Contact-Free Matching)
-- **The Problem**: Currently, Coy requires knowing someone's exact 10-digit mobile number. In college campuses, students often crush on someone whose name, department, or Instagram handle they know, but whose private phone number they don't have. Forcing them to track down a phone number creates friction and defeats the purpose of being "coy".
-- **The Feature**: Verified campus directories (e.g., via `@college.edu` email). Students can secretly select a crush from their campus circle without needing their phone number. An anonymous heads-up is sent: *"Someone in your college added you as their crush! 🤫"*.
-- **Why Required**: Solves the cold-start and contact-discovery barrier, while igniting hyper-local network effects on college campuses.
+**The gap both features solve:** Coy's anonymous heads-up tells someone that *someone* has a crush on them, but gives them nothing to go on. If they never think of the right person, a real mutual crush never becomes a match. Separately, Coy can't help at all when you don't have the person's number.
 
-### 2. Ephemeral 24-Hour Coy Lounge (Safe Post-Match Activation)
-- **The Problem**: When a match occurs, users are directly given each other's phone numbers. This causes immediate post-match paralysis: *"Who texts first on WhatsApp? What if it feels desperate?"*. Furthermore, all user engagement immediately leaves Coy for external apps.
-- **The Feature**: A private 24-hour in-app chat sandbox with gamified icebreakers (*"Guess who liked who first!"*). Users chat anonymously first, and only exchange phone numbers / social handles once both tap "Exchange Numbers".
-- **Why Required**: Eliminates first-move awkwardness, protects personal phone numbers before trust is established, and boosts in-app Daily Active Users (DAU).
+### 1. Clue Drop + Silent Guesses
+- **The Feature**: The sender can attach up to 2 clues from a fixed menu (verified college or workplace, how you know each other, how long). Example: *"Someone from IIT Delhi who's known you for years has a crush on you 🤫"*. The recipient gets 2 free **Silent Guesses**: adds that never message the person guessed, and only matter if that person had already added them.
+- **Why Required**: It fixes the step where Coy loses the most matches. Wrong guesses cost nothing and notify no one, and a clue is only shown if at least 25 members share it, so it can never identify the sender.
+
+### 2. Crush Night (event mode)
+- **The Feature**: At a fest or offsite, attendees check in with a venue QR code and appear on an opt-in, first-names-only roster. They secretly pick up to 3 names, and all matches are revealed at once at a set time. Unmatched picks are deleted immediately.
+- **Why Required**: It solves the "I don't have their number" gap with no profiles or browsing, and Coy's existing campus ambassadors can bring in hundreds of users from the same campus in one night.
+
+> Unlike Tinder or Bumble, neither feature adds browsing strangers, profiles or chat. They help people who already know each other find out that the feeling is mutual.
 
 *(See full breakdown in [docs/PART_A_FEATURE_SUGGESTIONS.md](docs/PART_A_FEATURE_SUGGESTIONS.md))*
 
