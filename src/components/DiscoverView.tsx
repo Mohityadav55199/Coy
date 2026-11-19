@@ -33,8 +33,10 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null);
   const [swipeFeedback, setSwipeFeedback] = useState<{
     text: string;
-    type: 'like' | 'pass';
+    type: 'like' | 'pass' | 'error';
   } | null>(null);
+  // Bumped when a swipe fails to save, so the front card remounts and returns.
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const fetchFeed = useCallback(async () => {
     setLoading(true);
@@ -87,9 +89,14 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
           }),
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
 
-        // Optimistically remove card from deck after exit animation
+        // 409 = the server already has a swipe for this profile, so it's safe to drop.
+        if (!res.ok && res.status !== 409) {
+          throw new Error(data.error || `Swipe failed (HTTP ${res.status})`);
+        }
+
+        // Remove card from deck after exit animation
         setTimeout(() => {
           setProfiles((prev) => prev.filter((p) => p.id !== currentProfile.id));
           setSwipingId(null);
@@ -103,10 +110,18 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
         }, 220);
       } catch (err) {
         console.error('Error recording swipe:', err);
-        // Fallback: still remove from UI
-        setProfiles((prev) => prev.filter((p) => p.id !== currentProfile.id));
-        setSwipingId(null);
-        setSwipeDirection(null);
+        // The swipe was NOT saved: bring the card back so the user can retry,
+        // instead of hiding a profile that would reappear after a reload.
+        setTimeout(() => {
+          setSwipingId(null);
+          setSwipeDirection(null);
+          setRetryNonce((n) => n + 1); // remount the front card at the centre
+          setSwipeFeedback({
+            text: "Couldn't save your swipe. Try again.",
+            type: 'error',
+          });
+          setTimeout(() => setSwipeFeedback(null), 2500);
+        }, 300);
       }
     },
     [profiles, swipingId, onMatch, onRefreshMatches]
@@ -156,6 +171,8 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
             className={`fixed top-16 z-40 px-4 py-1.5 rounded-full text-xs font-bold text-white shadow-lg backdrop-blur-md ${
               swipeFeedback.type === 'like'
                 ? 'bg-emerald-600/90 border border-emerald-400'
+                : swipeFeedback.type === 'error'
+                ? 'bg-gray-900/90 border border-amber-400'
                 : 'bg-rose-600/90 border border-rose-400'
             }`}
           >
@@ -237,7 +254,7 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
             {/* Front Interactive Card */}
             {profiles.length > 0 && (
               <SwipeCard
-                key={profiles[0].id}
+                key={`${profiles[0].id}-${retryNonce}`}
                 profile={profiles[0]}
                 isFront={true}
                 onSwipe={handleSwipe}
