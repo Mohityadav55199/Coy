@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import confetti from 'canvas-confetti';
 import { Heart, MessageCircle, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react';
@@ -19,8 +19,15 @@ export const MatchModal: React.FC<MatchModalProps> = ({
   onClose,
   onOpenChat,
 }) => {
+  // Mystery match: a sealed envelope first, identity revealed only on tap.
+  const [opened, setOpened] = useState(false);
+
   useEffect(() => {
-    if (matchedProfile) {
+    setOpened(false);
+  }, [matchedProfile]);
+
+  useEffect(() => {
+    if (matchedProfile && opened) {
       // Trigger festive confetti explosion
       const end = Date.now() + 1.8 * 1000;
       const colors = ['#E9336B', '#FF758F', '#10B981', '#F59E0B', '#3B82F6'];
@@ -46,9 +53,35 @@ export const MatchModal: React.FC<MatchModalProps> = ({
         }
       })();
     }
-  }, [matchedProfile]);
+  }, [matchedProfile, opened]);
 
   if (!matchedProfile) return null;
+
+  if (!opened) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <motion.button
+          onClick={() => setOpened(true)}
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-sm bg-[#1E1E24] border border-white/10 rounded-[2.5rem] p-8 text-center text-white shadow-2xl"
+        >
+          <motion.div
+            animate={{ rotate: [-8, 8, -8, 8, 0], y: [0, -6, 0] }}
+            transition={{ repeat: Infinity, duration: 1.4 }}
+            className="text-7xl mb-5"
+          >
+            💌
+          </motion.div>
+          <h2 className="text-2xl font-black mb-2">Someone liked you back…</h2>
+          <p className="text-sm text-gray-300 mb-5">Tap to see who. 🤫</p>
+          <span className="inline-block px-5 py-2.5 rounded-2xl bg-gradient-to-r from-[#E9336B] to-[#FF4D82] font-bold text-sm">
+            Open it
+          </span>
+        </motion.button>
+      </div>
+    );
+  }
 
   return (
     <AnimatePresence>

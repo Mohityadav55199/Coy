@@ -27,6 +27,7 @@ interface SwipeCardProps {
 }
 
 const SWIPE_THRESHOLD = 110;
+const BLUR_PX = 14;
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
@@ -44,6 +45,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   const rotate = useTransform(x, [-250, 0, 250], [-18, 0, 18]);
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-20, -120], [0, 1]);
+  // "Coy reveal": photo starts blurred and sharpens as you drag toward a like.
+  const blur = useTransform(x, [0, SWIPE_THRESHOLD], [BLUR_PX, 0]);
+  const blurFilter = useTransform(blur, (b) => `blur(${b}px)`);
 
   // Reset card state when profile changes
   useEffect(() => {
@@ -106,7 +110,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         <img
           src={photos[0]}
           alt={profile.name}
-          className="w-full h-full object-cover select-none filter brightness-90"
+          style={{ filter: `blur(${BLUR_PX}px)` }}
+          className="w-full h-full object-cover select-none scale-110 brightness-90"
           draggable={false}
           onError={(e) => {
             (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
@@ -134,10 +139,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       whileTap={{ cursor: 'grabbing' }}
     >
       {/* Background Image Carousel */}
-      <img
+      <motion.img
         src={photos[photoIndex]}
         alt={profile.name}
-        className="w-full h-full object-cover select-none transition-opacity duration-200"
+        style={{ filter: blurFilter }}
+        className="w-full h-full object-cover select-none scale-110"
         draggable={false}
         onError={(e) => {
           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
@@ -189,17 +195,17 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       {/* LIKE Stamp Indicator (fades in on drag right) */}
       <motion.div
         style={{ opacity: likeOpacity }}
-        className="absolute top-10 left-8 z-30 pointer-events-none border-4 border-emerald-400 bg-emerald-500/20 backdrop-blur-sm text-emerald-400 font-black text-3xl px-4 py-1.5 rounded-2xl tracking-wider -rotate-12 shadow-lg"
+        className="absolute top-10 left-6 z-30 pointer-events-none border-4 border-pink-400 bg-pink-500/25 backdrop-blur-sm text-pink-200 font-black text-xl px-3 py-1.5 rounded-2xl tracking-wide -rotate-12 shadow-lg"
       >
-        LIKE
+        🤫 SECRETLY LIKED
       </motion.div>
 
       {/* NOPE / PASS Stamp Indicator (fades in on drag left) */}
       <motion.div
         style={{ opacity: nopeOpacity }}
-        className="absolute top-10 right-8 z-30 pointer-events-none border-4 border-rose-500 bg-rose-500/20 backdrop-blur-sm text-rose-500 font-black text-3xl px-4 py-1.5 rounded-2xl tracking-wider rotate-12 shadow-lg"
+        className="absolute top-10 right-6 z-30 pointer-events-none border-4 border-slate-300 bg-slate-500/25 backdrop-blur-sm text-slate-100 font-black text-xl px-3 py-1.5 rounded-2xl tracking-wide rotate-12 shadow-lg"
       >
-        PASS
+        NOT THIS TIME
       </motion.div>
 
       {/* Dark Gradient Overlay for Readability */}
