@@ -39,3 +39,19 @@ body {
   will-change: transform;
 }
 
+
+/* Telegram-style spoiler dust over hidden photos */
+.spoiler-dust {
+  background-image:
+    radial-gradient(rgba(255, 255, 255, 0.85) 1px, transparent 1.5px),
+    radial-gradient(rgba(255, 180, 215, 0.7) 1px, transparent 1.5px);
+  background-size: 7px 7px, 11px 11px;
+  background-position: 0 0, 3px 5px;
+  background-color: rgba(20, 10, 30, 0.35);
+  animation: spoiler-shimmer 1.2s steps(6) infinite;
+  cursor: pointer;
+}
+@keyframes spoiler-shimmer {
+  0% { background-position: 0 0, 3px 5px; }
+  100% { background-position: 7px 7px, 14px 16px; }
+}

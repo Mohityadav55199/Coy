@@ -715,6 +715,21 @@
       "hasLikedUser": true
     }
   ],
-  "swipes": [],
+  "swipes": [
+    {
+      "id": "swp_1795081583689_lodhj",
+      "userId": "usr_mohit",
+      "profileId": "prof_1",
+      "action": "pass",
+      "timestamp": "2026-11-19T09:46:23.689Z"
+    },
+    {
+      "id": "swp_1795081590598_q8oh8",
+      "userId": "usr_mohit",
+      "profileId": "prof_2",
+      "action": "pass",
+      "timestamp": "2026-11-19T09:46:30.598Z"
+    }
+  ],
   "matches": []
 }

@@ -27,7 +27,6 @@ interface SwipeCardProps {
 }
 
 const SWIPE_THRESHOLD = 110;
-const BLUR_PX = 14;
 const FALLBACK_IMAGE =
   'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
@@ -40,19 +39,19 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showFullBio, setShowFullBio] = useState(false);
+  // Photos after the first are hidden behind a spoiler until tapped (curiosity hook).
+  const [revealed, setRevealed] = useState<Set<number>>(new Set([0]));
 
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-250, 0, 250], [-18, 0, 18]);
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-20, -120], [0, 1]);
-  // "Coy reveal": photo starts blurred and sharpens as you drag toward a like.
-  const blur = useTransform(x, [0, SWIPE_THRESHOLD], [BLUR_PX, 0]);
-  const blurFilter = useTransform(blur, (b) => `blur(${b}px)`);
 
   // Reset card state when profile changes
   useEffect(() => {
     setPhotoIndex(0);
     setShowFullBio(false);
+    setRevealed(new Set([0]));
     x.set(0);
   }, [profile.id, x]);
 
@@ -67,6 +66,8 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   }, [swipeTrigger, isFront, x]);
 
   const photos = profile.photos?.length ? profile.photos : [FALLBACK_IMAGE];
+  const isSpoiled = !revealed.has(photoIndex);
+  const revealPhoto = () => setRevealed((prev) => new Set(prev).add(photoIndex));
 
   const handleDragEnd = (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (!isFront) return;
@@ -110,8 +111,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         <img
           src={photos[0]}
           alt={profile.name}
-          style={{ filter: `blur(${BLUR_PX}px)` }}
-          className="w-full h-full object-cover select-none scale-110 brightness-90"
+          className="w-full h-full object-cover select-none filter brightness-90"
           draggable={false}
           onError={(e) => {
             (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
@@ -139,16 +139,38 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       whileTap={{ cursor: 'grabbing' }}
     >
       {/* Background Image Carousel */}
-      <motion.img
+      <img
         src={photos[photoIndex]}
         alt={profile.name}
-        style={{ filter: blurFilter }}
-        className="w-full h-full object-cover select-none scale-110"
+        className={`w-full h-full object-cover select-none transition-all duration-300 ${
+          isSpoiled ? 'blur-2xl scale-110' : ''
+        }`}
         draggable={false}
         onError={(e) => {
           (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
         }}
       />
+
+      {/* Telegram-style spoiler: shimmering dust over hidden photos */}
+      {isSpoiled && (
+        <div
+          className="absolute inset-0 z-[5] spoiler-dust flex items-center justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            revealPhoto();
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              revealPhoto();
+            }}
+            className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg"
+          >
+            ✨ Tap to reveal photo {photoIndex + 1}
+          </button>
+        </div>
+      )}
 
       {/* Top Photo Navigation Indicators */}
       {photos.length > 1 && (
