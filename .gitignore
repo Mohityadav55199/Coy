@@ -34,3 +34,6 @@ WhatsApp Image*
 .DS_Store
 Thumbs.db
 
+
+# TS build cache
+*.tsbuildinfo
