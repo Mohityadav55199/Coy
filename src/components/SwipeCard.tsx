@@ -160,15 +160,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
             revealPhoto();
           }}
         >
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              revealPhoto();
-            }}
-            className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg"
-          >
-            ✨ Tap to reveal photo {photoIndex + 1}
-          </button>
+          <div className="px-4 py-2 rounded-full bg-black/55 backdrop-blur-md text-white text-sm font-bold border border-white/20 shadow-lg pointer-events-none">
+            ✨ Tap anywhere to reveal photo {photoIndex + 1}
+          </div>
         </div>
       )}
 
@@ -187,7 +181,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       )}
 
       {/* Interactive Photo Tap Zones (Left 40% prev, Right 40% next) */}
-      {photos.length > 1 && (
+      {photos.length > 1 && !isSpoiled && (
         <>
           <div
             onClick={handlePrevPhoto}
@@ -234,7 +228,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
       <div className="absolute inset-0 bg-gradient-to-t from-black/95 via-black/45 to-transparent pointer-events-none" />
 
       {/* Profile Details Content Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-20 pointer-events-auto">
+      <div className="absolute bottom-0 left-0 right-0 p-6 text-white z-20 pointer-events-none">
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
@@ -265,7 +259,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
               e.stopPropagation();
               setShowFullBio(!showFullBio);
             }}
-            className="p-2 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md transition-colors text-white"
+            className="pointer-events-auto p-2 rounded-full bg-white/15 hover:bg-white/25 backdrop-blur-md transition-colors text-white"
             title="Toggle bio info"
           >
             <Info className="w-4 h-4" />

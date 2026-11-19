@@ -38,6 +38,12 @@ function loadState(): DatabaseState {
     try {
       const data = fs.readFileSync(DB_PATH, 'utf-8');
       memoryState = JSON.parse(data) as DatabaseState;
+      // Keep saved swipes/matches, but refresh profile galleries from the seed.
+      const seedById = new Map(SEED_PROFILES.map((sp) => [sp.id, sp]));
+      for (const prof of memoryState.profiles) {
+        const seeded = seedById.get(prof.id);
+        if (seeded) prof.photos = [...seeded.photos];
+      }
       return memoryState;
     } catch (err) {
       console.error('Error reading Coy database, falling back to initial seeds:', err);

@@ -1,6 +1,6 @@
 import type { InternalProfile } from '../types/index.ts';
 
-export const SEED_PROFILES: InternalProfile[] = [
+const RAW_PROFILES: InternalProfile[] = [
   {
     id: 'prof_1',
     name: 'Ananya Sharma',
@@ -517,3 +517,30 @@ export const SEED_PROFILES: InternalProfile[] = [
     hasLikedUser: true, // Will match on like!
   },
 ];
+
+const PHOTOS_PER_PROFILE = 4;
+
+/**
+ * Every profile gets PHOTOS_PER_PROFILE photos. Extra (placeholder) photos are
+ * borrowed deterministically from other seeded profiles of the same gender.
+ */
+function withGallery(profiles: InternalProfile[]): InternalProfile[] {
+  const pools: Record<string, string[]> = {};
+  for (const p of profiles) {
+    (pools[p.gender] ||= []);
+    for (const url of p.photos) {
+      if (!pools[p.gender].includes(url)) pools[p.gender].push(url);
+    }
+  }
+  return profiles.map((p, i) => {
+    const photos = [...p.photos];
+    const pool = pools[p.gender] ?? [];
+    for (let k = 1; photos.length < PHOTOS_PER_PROFILE && k <= pool.length; k++) {
+      const url = pool[(i + k) % pool.length];
+      if (!photos.includes(url)) photos.push(url);
+    }
+    return { ...p, photos };
+  });
+}
+
+export const SEED_PROFILES: InternalProfile[] = withGallery(RAW_PROFILES);
