@@ -3,7 +3,11 @@ import path from 'path';
 import type { DatabaseState, InternalProfile, MatchRecord, Profile, SwipeRecord } from '../types/index.ts';
 import { SEED_PROFILES } from '../data/seedProfiles.ts';
 
-const DB_DIR = path.join(process.cwd(), 'data');
+// Vercel's filesystem is read-only except /tmp, so store the database there when
+// deployed. /tmp is per server instance and is wiped on a cold start.
+const DB_DIR = process.env.VERCEL
+  ? path.join('/tmp', 'coy-data')
+  : path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DB_DIR, 'coy_database.json');
 
 // Default initial state: a single mock logged-in user (no real contact details)
