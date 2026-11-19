@@ -6,13 +6,13 @@ import { SEED_PROFILES } from '../data/seedProfiles.ts';
 const DB_DIR = path.join(process.cwd(), 'data');
 const DB_PATH = path.join(DB_DIR, 'coy_database.json');
 
-// Default initial state matching Mohit's verified Coy profile from app screenshots
+// Default initial state: a single mock logged-in user (no real contact details)
 const INITIAL_STATE: DatabaseState = {
   currentUser: {
     id: 'usr_mohit',
     name: 'Mohit',
-    phone: '+91 88169 27228',
-    email: 'mohityadav55199@gmail.com',
+    phone: '+91 98765 43210',
+    email: 'you@example.com',
     avatar: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=400&q=80',
   },
   profiles: SEED_PROFILES,
@@ -97,6 +97,16 @@ export function getFeed(userId: string = INITIAL_STATE.currentUser.id): Profile[
  * Records a swipe (like or pass).
  * If it is a like and the profile has pre-liked the user, a mutual match is formed!
  */
+/** Error with an HTTP status, so API routes can return 404 / 409 instead of 500. */
+export class SwipeError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+    this.name = 'SwipeError';
+  }
+}
+
 export function recordSwipe(
   profileId: string,
   action: 'like' | 'pass',
@@ -106,13 +116,17 @@ export function recordSwipe(
 
   const profile = state.profiles.find((p) => p.id === profileId);
   if (!profile) {
-    throw new Error(`Profile with id "${profileId}" not found`);
+    throw new SwipeError(`Profile with id "${profileId}" not found`, 404);
   }
 
-  // Prevent duplicate swiping
-  const existingSwipeIndex = state.swipes.findIndex(
+  // A swipe is final: a profile can be swiped once. Allowing a pass to be
+  // flipped into a like would let a client probe who has liked the user.
+  const alreadySwiped = state.swipes.some(
     (s) => s.userId === userId && s.profileId === profileId
   );
+  if (alreadySwiped) {
+    throw new SwipeError(`Profile "${profileId}" has already been swiped`, 409);
+  }
 
   const newSwipe: SwipeRecord = {
     id: `swp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
@@ -122,11 +136,7 @@ export function recordSwipe(
     timestamp: new Date().toISOString(),
   };
 
-  if (existingSwipeIndex >= 0) {
-    state.swipes[existingSwipeIndex] = newSwipe;
-  } else {
-    state.swipes.push(newSwipe);
-  }
+  state.swipes.push(newSwipe);
 
   let isMatch = false;
   let matchedProfile: Profile | undefined = undefined;

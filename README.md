@@ -9,7 +9,7 @@ A mobile-first, privacy-preserving swipe discovery experience built alongside Co
 This repository contains the complete implementation and technical documentation for the **Coy SDE Intern Assignment**:
 
 - **Part A**: Live product exploration of [app.getcoy.com](https://app.getcoy.com) and two strategic core feature proposals with detailed product and privacy rationale. (See [docs/PART_A_FEATURE_SUGGESTIONS.md](docs/PART_A_FEATURE_SUGGESTIONS.md) and summary below).
-- **Part B**: A standalone, production-ready "Discover" swipe feed built with **Next.js 14 (App Router)**, **TypeScript**, **Framer Motion**, and **Tailwind CSS**, powered by a persistent file-backed database layer.
+- **Part B**: A tab bar with a blank placeholder **Home** tab (as the brief asks) and the **Discover** tab, plus Matches and Settings. A standalone, production-ready "Discover" swipe feed built with **Next.js 14 (App Router)**, **TypeScript**, **Framer Motion**, and **Tailwind CSS**, powered by a persistent file-backed database layer.
 
 ---
 
@@ -48,6 +48,8 @@ This repository contains the complete implementation and technical documentation
   - `GET /matches` (or `/api/matches`): Returns mutual matches.
   - `POST /api/reset`: Resets demo state back to 32 fresh profiles.
 
+  `POST /swipe` body: `{ "profileId": "prof_1", "action": "like" | "pass" }`. It returns `400` for a bad body, `404` for an unknown profile, and `409` if the profile was already swiped (swipes are final).
+
 ---
 
 ## 🛠️ Tech Stack
@@ -82,7 +84,7 @@ This repository contains the complete implementation and technical documentation
 
 ## 🧪 Automated Test Suite
 
-Run the automated test suite verifying all 9 core backend requirements:
+Run the automated test suite verifying all 10 core backend requirements:
 
 ```bash
 npm test
@@ -97,7 +99,8 @@ npm test
 - [x] **Test 6**: `getMatches()` returns only mutual matches with timestamps.
 - [x] **Test 7**: Disk persistence verification across reloads (`data/coy_database.json`).
 - [x] **Test 8**: Non-repetition guarantee (swiped profiles never reappear).
-- [x] **Test 9**: Database reset functionality.
+- [x] **Test 9**: Swipes are final: re-swiping a profile is rejected (409), so a pass can never be flipped into a like to probe who liked you; unknown profile ids return 404.
+- [x] **Test 10**: Database reset functionality.
 
 ---
 
@@ -105,9 +108,11 @@ npm test
 
 ### 1. Clone the repository
 ```bash
-git clone <your-repo-url>
+git clone https://github.com/Mohityadav55199/Coy.git
 cd Coy
 ```
+
+Requires **Node.js 22.6+** (the test runner uses `--experimental-strip-types`).
 
 ### 2. Install dependencies
 ```bash
@@ -135,11 +140,11 @@ npm run start
 
 ## 📱 Live Demo Walkthrough Tips
 1. When you first open the app, you start on the **Discover** tab.
-2. Swipe right on **Ananya Sharma** or click the pink Heart button: notice the instant **"It's a Match!"** screen with confetti!
+2. Swipe right on **Ananya Sharma** or click the pink Heart button: a sealed 💌 "Someone liked you back…" envelope appears. Tap it to reveal the **"It's a Match!"** screen with confetti.
 3. Click **"Say Hello"** to open the chat icebreaker and send a message.
 4. Go back to Discover and swipe left (or press `←`) to pass on **Kabir Mehta**.
-5. Switch to the **Matches** tab to see your mutual match history and count.
-6. Check the **Home** tab to see how Discover fits alongside Coy's existing crush slots and referral card.
+5. On any card, tap photo 2 to reveal it, and press and hold on photos 3–4 to peek.
+6. Switch to the **Matches** tab to see your mutual match history and count.
 7. Click the **Reset Feed** button anytime in the header or settings to restore all 32 profiles for a fresh demo run.
 
 ---

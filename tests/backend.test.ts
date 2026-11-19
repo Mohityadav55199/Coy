@@ -122,8 +122,17 @@ assert.equal(
 );
 console.log(`  ✓ Non-repetition verified: none of the 3 swiped profiles appear in remaining feed`);
 
-// 9. Reset Functionality
-console.log('\n🧪 Test 9: Database Reset Functionality');
+// 9. Swipes are final + unknown profiles rejected
+console.log('\n🧪 Test 9: Swipes Are Final');
+const alreadySwipedId = SEED_PROFILES.find((p) => !getFeed().some((f) => f.id === p.id))!.id;
+assert.throws(() => recordSwipe(alreadySwipedId, 'like'), (e: any) => e.status === 409,
+  'Re-swiping a profile must be rejected with 409');
+assert.throws(() => recordSwipe('prof_does_not_exist', 'like'), (e: any) => e.status === 404,
+  'Unknown profile must be rejected with 404');
+console.log('  ✓ Re-swipe rejected (409), so a pass can never be flipped into a like; unknown id → 404');
+
+// 10. Reset Functionality
+console.log('\n🧪 Test 10: Database Reset Functionality');
 resetDatabase();
 const resetFeed = getFeed();
 const resetMatches = getMatches();
@@ -131,5 +140,5 @@ assert.equal(resetFeed.length, SEED_PROFILES.length, 'Reset should restore all 3
 assert.equal(resetMatches.length, 0, 'Reset should clear all matches');
 console.log('  ✓ resetDatabase() flawlessly restored initial state and cleared demo history');
 
-console.log('\n🎉 ALL 9 TEST SUITES PASSED FLAWLESSLY! 💯\n');
+console.log('\n🎉 ALL 10 TEST SUITES PASSED FLAWLESSLY! 💯\n');
 

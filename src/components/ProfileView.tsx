@@ -60,7 +60,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onReset, matchesCount 
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-400 font-medium">Your number</p>
-            <p className="text-sm font-bold text-gray-900 mt-0.5">+91 88169 27228</p>
+            <p className="text-sm font-bold text-gray-900 mt-0.5">+91 98765 43210</p>
           </div>
           <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">
             Verified
@@ -74,7 +74,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onReset, matchesCount 
           <div>
             <p className="text-xs text-gray-400 font-medium">Email</p>
             <p className="text-sm font-bold text-gray-900 mt-0.5">
-              mohityadav55199@gmail.com
+              you@example.com
             </p>
           </div>
           <button className="text-xs font-bold text-gray-900 underline">Remove</button>

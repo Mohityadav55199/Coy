@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { recordSwipe } from '@/lib/db';
+import { recordSwipe, SwipeError } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       profile: result.profile,
     });
   } catch (error: any) {
+    if (error instanceof SwipeError) {
+      return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    }
     console.error('Error recording swipe:', error);
     return NextResponse.json(
       { success: false, error: error.message || 'Failed to record swipe' },
