@@ -20,6 +20,13 @@ yarn-error.log*
 .env*.local
 .env
 
+# Assignment assets & screenshots
+Coy SDE Intern Assignment.pdf
+WhatsApp Image*
+*.jpeg
+*.jpg
+*.png
+
 # Database file (keep template / seed in repo, but ignore runtime state if desired or keep tracked)
 # data/db.json is tracked or initialized automatically
 
