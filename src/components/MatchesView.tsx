@@ -65,6 +65,19 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
     }
   }, [selectedChatProfile]);
 
+  useEffect(() => {
+    if (activeChatProfile) {
+      setMessages([
+        {
+          sender: 'them',
+          text: `Hey Mohit! We matched on Coy 😊 Did you add me first or did I add you?`,
+          time: 'Just now',
+        },
+      ]);
+      setInputMessage('');
+    }
+  }, [activeChatProfile?.id]);
+
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputMessage.trim()) return;
@@ -165,6 +178,10 @@ export const MatchesView: React.FC<MatchesViewProps> = ({
                   src={profile.photos[0]}
                   alt={profile.name}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src =
+                      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
+                  }}
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
                 <span className="absolute top-2 right-2 px-1.5 py-0.5 rounded-full bg-black/50 backdrop-blur-md text-white text-[10px] font-medium">

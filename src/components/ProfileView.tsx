@@ -24,8 +24,14 @@ export const ProfileView: React.FC<ProfileViewProps> = ({ onReset, matchesCount 
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const handleCopyLink = () => {
-    navigator.clipboard.writeText('https://app.getcoy.com/i/k868pjy');
+  const handleCopyLink = async () => {
+    try {
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText('https://app.getcoy.com/i/k868pjy');
+      }
+    } catch {
+      // Fallback
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

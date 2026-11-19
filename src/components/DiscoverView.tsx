@@ -235,30 +235,21 @@ export const DiscoverView: React.FC<DiscoverViewProps> = ({
             )}
 
             {/* Front Interactive Card */}
-            <AnimatePresence>
-              {profiles.length > 0 && (
-                <motion.div
-                  key={profiles[0].id}
-                  className="w-full h-full"
-                  animate={
-                    swipingId === profiles[0].id
-                      ? {
-                          x: swipeDirection === 'right' ? 500 : -500,
-                          rotate: swipeDirection === 'right' ? 25 : -25,
-                          opacity: 0,
-                        }
-                      : { x: 0, opacity: 1 }
-                  }
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                >
-                  <SwipeCard
-                    profile={profiles[0]}
-                    isFront={true}
-                    onSwipe={handleSwipe}
-                  />
-                </motion.div>
-              )}
-            </AnimatePresence>
+            {profiles.length > 0 && (
+              <SwipeCard
+                key={profiles[0].id}
+                profile={profiles[0]}
+                isFront={true}
+                onSwipe={handleSwipe}
+                swipeTrigger={
+                  swipingId === profiles[0].id
+                    ? swipeDirection === 'right'
+                      ? 'like'
+                      : 'pass'
+                    : null
+                }
+              />
+            )}
           </div>
         )}
       </div>

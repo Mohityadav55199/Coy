@@ -1,12 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   motion,
   useMotionValue,
   useTransform,
+  animate,
   PanInfo,
-  AnimatePresence,
 } from 'framer-motion';
 import {
   GraduationCap,
@@ -23,15 +23,19 @@ interface SwipeCardProps {
   isFront: boolean;
   onSwipe: (action: 'like' | 'pass') => void;
   isNext?: boolean;
+  swipeTrigger?: 'like' | 'pass' | null;
 }
 
 const SWIPE_THRESHOLD = 110;
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80';
 
 export const SwipeCard: React.FC<SwipeCardProps> = ({
   profile,
   isFront,
   onSwipe,
   isNext = false,
+  swipeTrigger = null,
 }) => {
   const [photoIndex, setPhotoIndex] = useState(0);
   const [showFullBio, setShowFullBio] = useState(false);
@@ -41,9 +45,24 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
   const likeOpacity = useTransform(x, [20, 120], [0, 1]);
   const nopeOpacity = useTransform(x, [-20, -120], [0, 1]);
 
-  const photos = profile.photos?.length ? profile.photos : [
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=800&q=80',
-  ];
+  // Reset card state when profile changes
+  useEffect(() => {
+    setPhotoIndex(0);
+    setShowFullBio(false);
+    x.set(0);
+  }, [profile.id, x]);
+
+  // Handle programmatic trigger (e.g. desktop button click)
+  useEffect(() => {
+    if (swipeTrigger && isFront) {
+      animate(x, swipeTrigger === 'like' ? 650 : -650, {
+        duration: 0.28,
+        ease: 'easeOut',
+      });
+    }
+  }, [swipeTrigger, isFront, x]);
+
+  const photos = profile.photos?.length ? profile.photos : [FALLBACK_IMAGE];
 
   const handleDragEnd = (_e: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (!isFront) return;
@@ -51,8 +70,10 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     const velocity = info.velocity.x;
 
     if (offset > SWIPE_THRESHOLD || velocity > 600) {
+      animate(x, 650, { duration: 0.22, ease: 'easeOut' });
       onSwipe('like');
     } else if (offset < -SWIPE_THRESHOLD || velocity < -600) {
+      animate(x, -650, { duration: 0.22, ease: 'easeOut' });
       onSwipe('pass');
     }
   };
@@ -87,6 +108,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
           alt={profile.name}
           className="w-full h-full object-cover select-none filter brightness-90"
           draggable={false}
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
         <div className="absolute bottom-6 left-6 right-6 text-white">
@@ -115,6 +139,9 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
         alt={profile.name}
         className="w-full h-full object-cover select-none transition-opacity duration-200"
         draggable={false}
+        onError={(e) => {
+          (e.target as HTMLImageElement).src = FALLBACK_IMAGE;
+        }}
       />
 
       {/* Top Photo Navigation Indicators */}
@@ -241,4 +268,3 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({
     </motion.div>
   );
 };
-
